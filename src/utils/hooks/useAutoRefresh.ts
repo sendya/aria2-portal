@@ -1,6 +1,6 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 
-const useAutoRefresh = <T = any>(cb: () => Promise<any>, sleep = 1000): void => {
+const useAutoRefresh = (cb: () => void, sleep = 1000): void => {
   const iv = ref<any /* number */>(0);
   const loading = ref(false);
   const fetch = async () => {

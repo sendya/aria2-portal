@@ -44,11 +44,18 @@ const mutations: MutationTree<WorkerState> = {
 
 const actions: ActionTree<WorkerState, RootState> = {
   update({ commit }) {
-    return getGlobalStat().then(res => {
-      commit('update', {
-        down: Number(res.result.downloadSpeed),
-        up: Number(res.result.uploadSpeed),
-      });
+    return new Promise((resolve, reject) => {
+      getGlobalStat()
+        .then(res => {
+          commit('update', {
+            down: Number(res.result.downloadSpeed),
+            up: Number(res.result.uploadSpeed),
+          });
+          resolve(true);
+        })
+        .catch(e => {
+          reject(e);
+        });
     });
   },
 };

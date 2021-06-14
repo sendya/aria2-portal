@@ -9,6 +9,7 @@ enum RPC {
   tellActive = 'aria2.tellActive',
   getGlobalStat = 'aria2.getGlobalStat',
   tellWaiting = 'aria2.tellWaiting',
+  getVersion = 'aria2.getVersion',
 }
 
 const reqKey = () => {
@@ -95,4 +96,13 @@ type GlobalStat = {
 
 export const getGlobalStat = (): Promise<JSONRPCResult<GlobalStat>> => {
   return request.post<JSONRPC, JSONRPCResult<GlobalStat>>('', gen(RPC.getGlobalStat));
+};
+
+type RPCInfo = {
+  version: string;
+  enabledFeatures: string[];
+};
+
+export const getVersion = (): Promise<JSONRPCResult<RPCInfo>> => {
+  return request.post<JSONRPC, JSONRPCResult<RPCInfo>>('', gen(RPC.getVersion));
 };

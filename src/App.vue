@@ -5,8 +5,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, onMounted } from 'vue';
 import { loadLanguageAsync } from '@/locales';
+import { getVersion } from '@/api/rpc';
 import useAutoRefresh from '@/utils/hooks/useAutoRefresh';
 
 import zh from 'ant-design-vue/es/locale/zh_CN';
@@ -20,7 +21,20 @@ export default defineComponent({
     if (lang) {
       loadLanguageAsync(lang);
     }
-    useAutoRefresh(store.dispatch('worker/update') as unknown as () => Promise<any>, 1000);
+    onMounted(() => {
+      // check rpc
+      getVersion()
+        .then(data => {
+          console.log('data', data);
+        })
+        .catch(e => {
+          console.log('e', e);
+        });
+    });
+    useAutoRefresh(() => {
+      store.dispatch('worker/update');
+    }, 1000);
+
     return {
       zh,
     };
