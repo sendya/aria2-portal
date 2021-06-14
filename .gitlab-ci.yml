@@ -1,0 +1,46 @@
+variables:
+  IMAGE_FULL_NAME: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}
+
+stages:
+  - install
+  - build
+
+cache:
+  key: ${CI_PROJECT_NAME}
+  paths:
+  - node_modules/
+
+install:
+  image: node:14.15.1
+  stage: install
+  tags:
+    - shared
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - dist
+  before_script:
+    - yarn config set registry https://registry.npm.taobao.org -g
+    - yarn config set sass_binary_site http://cdn.npm.taobao.org/dist/node-sass -g
+  script:
+    - yarn && yarn build
+  only:
+    - /^beta.*$/
+    - /^release.*$/
+
+build:
+  image: docker:latest
+  stage: build
+  dependencies:
+    - install
+  tags:
+    - shared
+  script:
+    - docker login --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build --rm --pull -t $IMAGE_FULL_NAME .
+    - docker push $IMAGE_FULL_NAME
+  only:
+    - /^beta.*$/
+    - /^release.*$/
+
+
