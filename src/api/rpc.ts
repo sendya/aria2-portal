@@ -30,6 +30,21 @@ export type JSONRPCResult<T = Record<string, any>[]> = {
   result: T;
 };
 
+export type OriginDownloadItem = {
+  bittorrent: Record<string, any>;
+  completedLength: string;
+  connections: string;
+  downloadSpeed: string;
+  files: Record<string, any>[];
+  gid: string;
+  infoHash: string;
+  numSeeders: string;
+  seeder: string;
+  status: 'active' | 'paused';
+  totalLength: string;
+  uploadSpeed: string;
+};
+
 export const gen = (method: RPC, params?: RequestParams): JSONRPC => {
   const token = localStorage.getItem('__token') || '';
   return {
@@ -77,12 +92,30 @@ export const addDownload = (urls: string[]): Promise<JSONRPCResult> => {
   return request.post<JSONRPC, JSONRPCResult>('', gen(RPC.addUri, urls || []));
 };
 
-export const tellActive = (): Promise<JSONRPCResult> => {
-  return request.post<JSONRPC, JSONRPCResult>('', gen(RPC.tellActive, getKeys));
+export const tellActive = (): Promise<JSONRPCResult<OriginDownloadItem[]>> => {
+  return request.post<JSONRPC, JSONRPCResult<OriginDownloadItem[]>>(
+    '',
+    gen(RPC.tellActive, getKeys),
+  );
 };
 
-export const tellWaiting = (): Promise<JSONRPCResult> => {
-  return request.post<JSONRPC, JSONRPCResult>('', genPager(RPC.tellWaiting, 0, 100, getKeys));
+export const tellWaiting = (): Promise<JSONRPCResult<OriginDownloadItem[]>> => {
+  return request.post<JSONRPC, JSONRPCResult<OriginDownloadItem[]>>(
+    '',
+    genPager(RPC.tellWaiting, 0, 100, getKeys),
+  );
+};
+
+export const tellDownloadList = (): Promise<OriginDownloadItem[]> => {
+  return new Promise((resolve, reject) => {
+    Promise.all([tellActive(), tellWaiting()])
+      .then(res => {
+        const dataList = res.map(item => item.result).reduce((cur, arr) => [...cur, ...arr], []);
+        console.log('dataList', dataList);
+        resolve(dataList);
+      })
+      .catch(reject);
+  });
 };
 
 type GlobalStat = {

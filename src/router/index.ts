@@ -18,12 +18,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/downloading.vue'),
       },
       {
-        path: '/waiting',
-        name: 'waiting',
-        meta: { title: 'pages.waiting.title', icon: 'ClockCircleOutlined' },
-        component: () => import('@/views/downloading.vue'),
-      },
-      {
         path: '/stopped',
         name: 'stopped',
         meta: { title: 'pages.stopped.title', icon: 'CheckCircleOutlined' },

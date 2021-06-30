@@ -53,8 +53,12 @@
         <template #processing="{ text }">
           <a-progress style="width: 90%" :percent="text" :status="text < 100 ? 'active' : null" />
         </template>
-        <template #speed="{ text }">
-          <strong>{{ text !== null ? `${formatSizeUnits(text)}/s` : '-' }}</strong>
+        <template #speed="{ record }">
+          <ArrowUpOutlined v-if="record.seeder === 'true'" />
+          <ArrowDownOutlined v-else-if="record.status !== 'paused'" />
+          <span style="margin-left: 4px">
+            {{ speedRender(record) }}
+          </span>
         </template>
       </a-table>
     </a-card>
@@ -95,7 +99,7 @@ import { defineComponent, ref, reactive, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { message } from 'ant-design-vue';
 import { formatSizeUnits } from '@/utils/file';
-import { tellActive, tellWaiting, addDownload } from '@/api/rpc';
+import { tellDownloadList, addDownload } from '@/api/rpc';
 import { useStore } from 'vuex';
 import { useForm } from '@ant-design-vue/use';
 import type { ColumnProps } from '@/typing';
@@ -110,6 +114,8 @@ type Item = {
   time: string;
   speed?: number;
   upspeed?: number;
+  seeder: 'true' | 'false';
+  status: 'paused' | 'active';
 };
 const columns: ColumnProps<Item>[] = [
   {
@@ -135,11 +141,21 @@ const columns: ColumnProps<Item>[] = [
   // },
   {
     dataIndex: 'speed',
-    title: '下载速度',
+    title: '下载/上行速度',
     width: '150px',
     slots: { customRender: 'speed' },
   },
 ];
+
+const speedRender = (record: Item) => {
+  if (record.status === 'active') {
+    if (record.seeder === 'true') {
+      return `${formatSizeUnits(record.upspeed)}/s`;
+    }
+    return `${formatSizeUnits(record.speed)}/s`;
+  }
+  return '已暂停';
+};
 
 export default defineComponent({
   setup() {
@@ -199,8 +215,8 @@ export default defineComponent({
     };
 
     const load = () => {
-      tellActive().then(res => {
-        d.value = res.result.map(item => {
+      tellDownloadList().then(res => {
+        d.value = res.map(item => {
           const process = Number(
             (Number(item.completedLength) / Number(item.totalLength)) * 100,
           ).toFixed(2);
@@ -211,32 +227,34 @@ export default defineComponent({
             size: Number(item.totalLength),
             speed: Number(item.downloadSpeed),
             upspeed: Number(item.uploadSpeed),
+            seeder: item.seeder,
+            status: item.status,
           } as Item;
         });
 
-        setTimeout(load, 1000);
+        setTimeout(load, 2000);
       });
     };
 
     onMounted(() => {
       load();
 
-      tellWaiting().then(res => {
-        waitingList.value = res.result.map(item => {
-          const process = Number(
-            (Number(item.completedLength) / Number(item.totalLength)) * 100,
-          ).toFixed(2);
-          return {
-            hash: item.gid,
-            file: item.bittorrent.info.name,
-            processing: Number(process),
-            size: Number(item.totalLength),
-            speed: Number(item.downloadSpeed),
-            upspeed: Number(item.uploadSpeed),
-          } as Item;
-        });
-        console.log('res', res);
-      });
+      // tellWaiting().then(res => {
+      //   waitingList.value = res.result.map(item => {
+      //     const process = Number(
+      //       (Number(item.completedLength) / Number(item.totalLength)) * 100,
+      //     ).toFixed(2);
+      //     return {
+      //       hash: item.gid,
+      //       file: item.bittorrent.info.name,
+      //       processing: Number(process),
+      //       size: Number(item.totalLength),
+      //       speed: Number(item.downloadSpeed),
+      //       upspeed: Number(item.uploadSpeed),
+      //     } as Item;
+      //   });
+      //   console.log('res', res);
+      // });
     });
     return {
       t,
@@ -246,6 +264,7 @@ export default defineComponent({
       hasSelected,
       customRow,
       dataSource,
+      speedRender,
 
       modalState,
       handleAdd,
