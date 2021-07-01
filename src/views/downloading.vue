@@ -46,6 +46,7 @@
         :custom-row="customRow"
         :data-source="dataSource"
         :row-selection="rowSelection"
+        :row-class-name="record => `aria-${record.status}`"
       >
         <template #size="{ text }">
           {{ formatSizeUnits(text) }}
@@ -55,7 +56,7 @@
         </template>
         <template #speed="{ record }">
           <ArrowUpOutlined v-if="record.seeder === 'true'" />
-          <ArrowDownOutlined v-else-if="record.status !== 'paused'" />
+          <ArrowDownOutlined v-else-if="!['paused', 'complete'].includes(record.status)" />
           <span style="margin-left: 4px">
             {{ speedRender(record) }}
           </span>
@@ -115,7 +116,7 @@ type Item = {
   speed?: number;
   upspeed?: number;
   seeder: 'true' | 'false';
-  status: 'paused' | 'active';
+  status: 'paused' | 'active' | 'complete';
 };
 const columns: ColumnProps<Item>[] = [
   {
@@ -154,6 +155,9 @@ const speedRender = (record: Item) => {
     }
     return `${formatSizeUnits(record.speed)}/s`;
   }
+  if (record.status === 'complete') {
+    return '已完成';
+  }
   return '已暂停';
 };
 
@@ -161,9 +165,8 @@ export default defineComponent({
   setup() {
     const { t } = useI18n();
     const store = useStore();
-    const waitingList = ref<Item[]>([]);
-    const d = ref<Item[]>([]);
-    const { customRow, dataSource } = useDraggableRow(d);
+    const list = ref<Item[]>([]);
+    const { customRow, dataSource } = useDraggableRow(list);
 
     const modalState = reactive({
       loading: false,
@@ -216,13 +219,14 @@ export default defineComponent({
 
     const load = () => {
       tellDownloadList().then(res => {
-        d.value = res.map(item => {
+        list.value = res.map(item => {
           const process = Number(
             (Number(item.completedLength) / Number(item.totalLength)) * 100,
           ).toFixed(2);
+          console.log('item', item);
           return {
             hash: item.infoHash,
-            file: item.bittorrent.info.name,
+            file: (item.bittorrent.info && item.bittorrent.info.name) || item.files[0].path,
             processing: Number(process),
             size: Number(item.totalLength),
             speed: Number(item.downloadSpeed),
@@ -238,23 +242,6 @@ export default defineComponent({
 
     onMounted(() => {
       load();
-
-      // tellWaiting().then(res => {
-      //   waitingList.value = res.result.map(item => {
-      //     const process = Number(
-      //       (Number(item.completedLength) / Number(item.totalLength)) * 100,
-      //     ).toFixed(2);
-      //     return {
-      //       hash: item.gid,
-      //       file: item.bittorrent.info.name,
-      //       processing: Number(process),
-      //       size: Number(item.totalLength),
-      //       speed: Number(item.downloadSpeed),
-      //       upspeed: Number(item.uploadSpeed),
-      //     } as Item;
-      //   });
-      //   console.log('res', res);
-      // });
     });
     return {
       t,
@@ -285,6 +272,32 @@ export default defineComponent({
   }
   :deep(.ant-table) {
     min-height: 460px;
+
+    .ant-table-tbody > {
+      // aria-complete
+      tr.aria-complete {
+        background-color: rgb(208 239 193 / 50%);
+      }
+      tr.aria-paused {
+        background-color: rgb(200 200 200 / 30%);
+      }
+      tr:hover:not(.ant-table-expanded-row):not(.ant-table-row-selected) {
+        &.aria-complete > td {
+          background-color: rgb(208 239 193 / 65%);
+        }
+        &.aria-paused > td {
+          background-color: rgb(200 200 200 / 50%);
+        }
+      }
+      tr.ant-table-row-selected {
+        &.aria-complete > td {
+          background-color: rgb(208 239 193 / 65%);
+        }
+        &.aria-paused > td {
+          background-color: rgb(200 200 200 / 50%);
+        }
+      }
+    }
   }
 }
 </style>

@@ -9,6 +9,7 @@ enum RPC {
   tellActive = 'aria2.tellActive',
   getGlobalStat = 'aria2.getGlobalStat',
   tellWaiting = 'aria2.tellWaiting',
+  tellStopped = 'aria2.tellStopped',
   getVersion = 'aria2.getVersion',
 }
 
@@ -40,7 +41,7 @@ export type OriginDownloadItem = {
   infoHash: string;
   numSeeders: string;
   seeder: string;
-  status: 'active' | 'paused';
+  status: 'active' | 'paused' | 'complete';
   totalLength: string;
   uploadSpeed: string;
 };
@@ -106,9 +107,13 @@ export const tellWaiting = (): Promise<JSONRPCResult<OriginDownloadItem[]>> => {
   );
 };
 
+export const tellStopped = (): Promise<JSONRPCResult> => {
+  return request.post<JSONRPC, JSONRPCResult>('', genPager(RPC.tellStopped, 0, 100, getKeys));
+};
+
 export const tellDownloadList = (): Promise<OriginDownloadItem[]> => {
   return new Promise((resolve, reject) => {
-    Promise.all([tellActive(), tellWaiting()])
+    Promise.all([tellActive(), tellWaiting(), tellStopped()])
       .then(res => {
         const dataList = res.map(item => item.result).reduce((cur, arr) => [...cur, ...arr], []);
         console.log('dataList', dataList);
