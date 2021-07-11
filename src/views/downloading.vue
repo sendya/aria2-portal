@@ -223,7 +223,6 @@ export default defineComponent({
           const process = Number(
             (Number(item.completedLength) / Number(item.totalLength)) * 100,
           ).toFixed(2);
-          console.log('item', item);
           return {
             hash: item.infoHash,
             file: (item.bittorrent.info && item.bittorrent.info.name) || item.files[0].path,

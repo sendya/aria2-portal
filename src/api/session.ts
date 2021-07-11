@@ -1,7 +1,10 @@
 /* eslint no-shadow: "off" */
-import request from '@/utils/request';
+export type PROTOCOL = 'http' | 'https' | 'ws' | 'wss';
+export type REQUEST_METHOD = 'get' | 'post';
 
 export type RPCSession = {
+  protocol: PROTOCOL;
+  method?: REQUEST_METHOD;
   key: string;
   host: string;
   token: string;

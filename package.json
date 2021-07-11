@@ -10,7 +10,7 @@
     "lint:check": "eslint src/**/*.{ts,tsx,js,json,vue}"
   },
   "dependencies": {
-    "@ant-design-vue/pro-layout": "^3.0.0-beta.11",
+    "@ant-design-vue/pro-layout": "^3.0.0-beta.12",
     "@ant-design-vue/use": "^0.0.1-alpha.10",
     "@ant-design/icons-vue": "^6.0.1",
     "ant-design-vue": "^2.2.0-rc.1",

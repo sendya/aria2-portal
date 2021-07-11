@@ -32,7 +32,7 @@ export default defineComponent({
         });
     });
     useAutoRefresh(() => {
-      store.dispatch('worker/update');
+      // store.dispatch('worker/update');
     }, 1000);
 
     return {

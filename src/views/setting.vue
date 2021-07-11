@@ -15,6 +15,7 @@
 import { defineComponent, reactive, h } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { PlusOutlined } from '@ant-design/icons-vue';
+import { useSession } from '@/utils/ariaSession';
 import SettingGlobal from './components/SettingGlobal.vue';
 import RPC from './components/RPC.vue';
 
@@ -25,6 +26,7 @@ export default defineComponent({
   },
   setup() {
     const { t } = useI18n();
+    const { current } = useSession();
     const pageProps = reactive({
       tabList: [
         { key: 'setting-global', tab: '全局' },
@@ -42,6 +44,8 @@ export default defineComponent({
         pageProps.tabActiveKey = key;
       },
     });
+
+    console.log('current', current);
 
     return { t, pageProps };
   },
